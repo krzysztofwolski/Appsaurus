@@ -4,6 +4,8 @@ import {
   keypress,
   KeyPressEvent,
 } from "https://deno.land/x/cliffy@v0.25.4/keypress/mod.ts";
+import { colors } from "https://deno.land/x/cliffy@v0.25.4/ansi/colors.ts";
+import { Table } from "https://deno.land/x/cliffy@v0.25.4/table/mod.ts";
 
 const NAME = "Appsaurus";
 const VERSION = "0.0.1";
@@ -129,21 +131,26 @@ await new Command()
     default: "/api/manifest" as string,
   })
   .action(async (options, ...args) => {
-    console.log(options, args);
     console.log(
       `Starting the tunnel for application running at port ${options.port}`,
     );
 
     const localManifestUrl =
       `http://localhost:${options.port}${options.manifestPath}`;
-    console.log(`Test if manifest is available at ${localManifestUrl}...`);
+    console.log(
+      `Test if manifest is available at ${
+        colors.bold.underline(localManifestUrl)
+      }...`,
+    );
 
     const resp = await fetch(localManifestUrl);
     if (resp.status == 200) {
-      console.log("We were able to reach given endpoint.");
+      console.log(colors.brightGreen("We were able to reach given endpoint."));
     } else {
       console.error(
-        `Got non 200 status - ${resp.status}. Please check if your dev server is up and running!`,
+        colors.red(
+          `Got non 200 status - ${resp.status}. Please check if your dev server is up and running!`,
+        ),
       );
       return;
     }
@@ -155,7 +162,7 @@ await new Command()
     });
 
     let tunnelUrl = "";
-    for (let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < 50; i += 1) {
       try {
         tunnelUrl = await getTunnelUrl();
       } catch {
@@ -167,11 +174,14 @@ await new Command()
       await sleep(100);
     }
     if (!tunnelUrl) {
-      console.error("Could not get tunnel URL. Aborting.");
+      console.error(colors.bold.red("Could not get tunnel URL. Aborting."));
       return;
+    } else {
+      console.log(colors.brightGreen("Success"));
     }
 
-    console.log("Tunnel started at URL:", tunnelUrl);
+    console.log();
+    console.log();
 
     const config = createConfig({
       appArgs: {
@@ -181,8 +191,20 @@ await new Command()
       tunnelUrl,
     });
 
-    console.log("To instal the app, click on: ", config.appInstallUrl);
-    console.log("Inspect traffic: http://localhost:4040/inspect/http");
+    const table: Table = new Table(
+      [
+        "To instal the app, click on: ",
+        colors.underline.yellow(config.appInstallUrl),
+      ],
+      [
+        "Inspect traffic: ",
+        colors.underline.yellow("http://localhost:4040/inspect/http"),
+      ],
+      ["Tunnel started at URL:", colors.underline.yellow(tunnelUrl)],
+    );
+
+    console.log(table.toString());
+
     console.log();
     console.log("Press i to install");
     console.log("Press a to open tunnel");

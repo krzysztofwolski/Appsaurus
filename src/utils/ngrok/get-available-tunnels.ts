@@ -4,7 +4,7 @@ type EndpointListResponse = {
   }];
 };
 
-export const getAwaitableTunnels = async (): Promise<string[]> => {
+export const getAvailableTunnels = async (): Promise<string[]> => {
   try {
     const p = Deno.run({
       cmd: ["ngrok", "api", "endpoints", "list"],

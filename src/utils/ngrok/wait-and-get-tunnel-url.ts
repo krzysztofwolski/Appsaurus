@@ -1,5 +1,5 @@
 import { sleep } from "@utils/sleep.ts";
-import { getAwaitableTunnels } from "@utils/ngrok/get-available-tunnels.ts";
+import { getAvailableTunnels } from "@utils/ngrok/get-available-tunnels.ts";
 
 /**
  * Periodically checks or
@@ -9,7 +9,7 @@ import { getAwaitableTunnels } from "@utils/ngrok/get-available-tunnels.ts";
 export const waitAndGetTunnelUrl = async (timeout: number) => {
   const poolingTime = 100;
   for (let i = 0; i < timeout; i += poolingTime) {
-    const tunnelUrls = await getAwaitableTunnels();
+    const tunnelUrls = await getAvailableTunnels();
     if (tunnelUrls.length < 1) {
       // ngrok had not enough time to start up.
       // wait a little more

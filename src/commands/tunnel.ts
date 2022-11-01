@@ -5,10 +5,11 @@ import { keypress, KeyPressEvent } from "cliffy/keypress/mod.ts";
 import { Command } from "cliffy/command/mod.ts";
 import { NAME } from "../const.ts";
 import { isEndpointAvailable } from "@utils/is-endpoint-available.ts";
-import { getAwaitableTunnels } from "@utils/ngrok/get-available-tunnels.ts";
+import { getAvailableTunnels } from "@utils/ngrok/get-available-tunnels.ts";
 import { createTunnel } from "@utils/ngrok/create-tunnel.ts";
 import { waitAndGetTunnelUrl } from "@utils/ngrok/wait-and-get-tunnel-url.ts";
 import { createIUrls } from "@utils/create-i-urls.ts";
+import Kia from "kia";
 
 export const tunnel = new Command()
   .description("Start ngrok tunnel for App.")
@@ -30,6 +31,7 @@ export const tunnel = new Command()
     default: "/api/manifest" as string,
   })
   .action(async (options) => {
+    console.log();
     console.log(
       `Starting the tunnel for application running at port ${options.port}`,
     );
@@ -37,7 +39,7 @@ export const tunnel = new Command()
     const localManifestUrl =
       `http://localhost:${options.port}${options.manifestPath}`;
 
-    console.log(
+    const kiaTestLocal = new Kia(
       `Test if manifest is available at ${
         colors.bold.underline(localManifestUrl)
       }...`,
@@ -45,11 +47,11 @@ export const tunnel = new Command()
 
     const localEndpointAvailable = await isEndpointAvailable(localManifestUrl);
     if (localEndpointAvailable) {
-      console.log(
-        colors.brightGreen("Endpoint available"),
+      kiaTestLocal.succeed(
+        `${localManifestUrl} is responding`,
       );
     } else {
-      console.error(
+      kiaTestLocal.fail(
         colors.red(
           `Manifest endpoint (${localManifestUrl}) did not responded with code 200`,
         ),
@@ -61,11 +63,12 @@ export const tunnel = new Command()
       return;
     }
 
+    const kiaTunnel = new Kia("Starting the ngrok...");
     // check if theres tunnel running before we open ours
-    const existingTunnel = await getAwaitableTunnels();
+    const existingTunnel = await getAvailableTunnels();
     if (existingTunnel.length > 0) {
       // TODO: handle case where there are multiple tunnels running
-      console.error(
+      kiaTunnel.fail(
         colors.red(
           `Seems theres ngrok tunnel already running - ${existingTunnel[0]}`,
         ),
@@ -76,25 +79,45 @@ export const tunnel = new Command()
       return;
     }
 
-    console.log("Starting the ngrok...");
     const tunnel = createTunnel(options.port);
+    kiaTunnel.set("Waiting for tunnel URL");
     const tunnelUrl = await waitAndGetTunnelUrl(10000) || "";
 
     if (!tunnelUrl) {
-      console.error(colors.bold.red("Could not get tunnel URL. Aborting."));
+      kiaTunnel.fail(colors.bold.red("Could not get tunnel URL. Aborting."));
       return;
     } else {
-      console.log(colors.brightGreen("Success"));
+      kiaTunnel.succeed("Tunnel established!");
     }
-
-    console.log();
-    console.log();
 
     const iUrls = createIUrls({
       instanceUrl: options.instanceUrl,
       manifestPath: options.manifestPath,
       tunnelUrl: tunnelUrl,
     });
+
+    const kiaTestTunneled = new Kia(
+      `Test if tunneled manifest is available at ${
+        colors.bold.underline(iUrls.tunneledManifestIUrl.toString())
+      }...`,
+    );
+
+    const tunneledEndpointAvailable = await isEndpointAvailable(
+      iUrls.tunneledManifestIUrl.toString(),
+    );
+    if (tunneledEndpointAvailable) {
+      kiaTestTunneled.succeed(
+        `${iUrls.tunneledManifestIUrl.toString()} is available`,
+      );
+    } else {
+      kiaTestTunneled.fail(
+        colors.red(
+          `Manifest endpoint (${iUrls.tunneledManifestIUrl.toString()}) did not responded with code 200`,
+        ),
+      );
+    }
+    console.log();
+    console.log();
 
     const table: Table = new Table(
       [

@@ -1,0 +1,17 @@
+{
+  "importMap": "import_map.json",
+  "lint": {
+    "files": {
+      "exclude": [
+        ".vscode"
+      ]
+    }
+  },
+  "fmt": {
+    "files": {
+      "exclude": [
+        ".vscode"
+      ]
+    }
+  }
+}

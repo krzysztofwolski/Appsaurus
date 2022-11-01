@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "cliffy/": "https://deno.land/x/cliffy@v0.25.4/",
+    "url_parse": "https://deno.land/x/url_parse@1.1.0/mod.ts",
+    "@utils/": "./src/utils/"
+  }
+}

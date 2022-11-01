@@ -30,3 +30,5 @@ deno run --allow-run --allow-net ./main.ts tunnel --instance-url https://XXXX.eu
 
 - The first time you visit app url, you'll need to accept ngrok notification
   about tunneled
+
+> **Note**<br/> This is not official Saleor Commerce project

@@ -4,7 +4,7 @@ Lil helper tool for Saleor App dev
 
 ## Requirements
 
-- Deno
+- Deno >= 1.27
 - ngrok
 
 > **Warning**<br/>
